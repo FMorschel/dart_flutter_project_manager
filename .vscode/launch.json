@@ -9,7 +9,7 @@
       "request": "launch",
       "type": "dart",
       "toolArgs": [
-        "--enable-experiment=inline-class,no-slow-checks",
+        "--enable-experiment=inline-class",
       ],
     },
     {
@@ -18,7 +18,7 @@
       "type": "dart",
       "flutterMode": "profile",
       "toolArgs": [
-        "--enable-experiment=inline-class,no-slow-checks",
+        "--enable-experiment=inline-class",
       ],
     },
     {
@@ -27,7 +27,7 @@
       "type": "dart",
       "flutterMode": "release",
       "toolArgs": [
-        "--enable-experiment=inline-class,no-slow-checks",
+        "--enable-experiment=inline-class",
       ],
     }
   ]
