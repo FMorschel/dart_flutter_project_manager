@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'src/directory_searching.dart';
 import 'src/global/theme_mode_controller.dart';
 import 'src/home.dart';
 import 'src/loading.dart';
@@ -31,6 +32,10 @@ class _MainAppState extends State<MainApp> {
       GoRoute(
         path: HomePage.routeName,
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: DirectorySearchingPage.routeName,
+        builder: (context, state) => const DirectorySearchingPage(),
       ),
     ],
   );
