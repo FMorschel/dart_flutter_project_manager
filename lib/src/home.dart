@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'classes/classes.dart';
+import 'directory_searching.dart';
 import 'global/global.dart';
 
 class HomePage extends StatefulWidget {
@@ -33,7 +35,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    completer.value.complete();
+    if (!completer.value.isCompleted) completer.value.complete();
     completer.dispose();
     controller.dispose();
     super.dispose();
@@ -45,6 +47,14 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Dart/Flutter Project Manager'),
+          actions: [
+            IconButton(
+              onPressed: () {
+                context.push(DirectorySearchingPage.routeName);
+              },
+              icon: const Icon(Icons.search),
+            ),
+          ],
         ),
         body: Column(
           children: [

@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -15,7 +18,8 @@ class DirectorySearchingPage extends StatefulWidget {
 }
 
 class _DirectorySearchingPageState extends State<DirectorySearchingPage> {
-  final openDirectory = Completer<Directory>();
+  final crossAxisCount = ValueNotifier(10);
+  final openDirectory = Completer<Directory?>();
 
   @override
   void initState() {
@@ -24,48 +28,83 @@ class _DirectorySearchingPageState extends State<DirectorySearchingPage> {
   }
 
   @override
+  void dispose() {
+    crossAxisCount.dispose();
+    if (!openDirectory.isCompleted) openDirectory.complete(null);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder(
-        future: openDirectory.future,
-        builder: (context, asyncSnapshot) {
-          if (!asyncSnapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          return StreamBuilder(
-            stream: list(asyncSnapshot.data!.list()),
+    return CallbackShortcuts(
+      bindings: {
+        const CharacterActivator('+', control: true): _decreseCrossAxisCount,
+        const CharacterActivator('-', control: true): _increseCrossAxisCount,
+        SingleActivator(LogicalKeyboardKey.arrowUp): _increseCrossAxisCount,
+        SingleActivator(LogicalKeyboardKey.arrowDown): _decreseCrossAxisCount,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          body: FutureBuilder(
+            future: openDirectory.future,
             builder: (context, asyncSnapshot) {
               if (!asyncSnapshot.hasData) {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
               }
-              final fses = asyncSnapshot.data!;
-              final dirs = fses.whereType<Directory>();
-              final files = fses.whereType<File>();
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 60,
-                ),
-                itemCount: dirs.length + files.length,
-                itemBuilder: (context, index) {
-                  if (index < dirs.length) {
-                    return DirectoryTile(
-                      directory: dirs.elementAt(index),
+              return StreamBuilder(
+                stream: list(asyncSnapshot.data!.list()),
+                builder: (context, asyncSnapshot) {
+                  if (!asyncSnapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
                     );
                   }
-                  return FileTile(
-                    file: files.elementAt(index - dirs.length),
+                  final fses = asyncSnapshot.data!;
+                  final dirs = fses.whereType<Directory>().sorted(sort);
+                  final files = fses.whereType<File>().sorted(sort);
+                  return ValueListenableBuilder(
+                    valueListenable: crossAxisCount,
+                    builder: (context, crossAxisCount, _) {
+                      return GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                        ),
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.all(8),
+                        itemCount: dirs.length + files.length,
+                        itemBuilder: (context, index) {
+                          if (index < dirs.length) {
+                            return DirectoryTile(
+                              directory: dirs.elementAt(index),
+                            );
+                          }
+                          return FileTile(
+                            file: files.elementAt(index - dirs.length),
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               );
             },
-          );
-        },
+          ),
+        ),
       ),
     );
+  }
+
+  void _decreseCrossAxisCount() {
+    crossAxisCount.value = math.max(crossAxisCount.value - 1, 2);
+  }
+
+  void _increseCrossAxisCount() {
+    crossAxisCount.value = math.min(crossAxisCount.value + 1, 15);
   }
 
   Future<Directory> _openDocumentsDirectory() async {
@@ -105,7 +144,10 @@ class DirectoryTile<D extends Directory> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Image.asset('assets/images/folder.png'),
+    );
   }
 }
 
